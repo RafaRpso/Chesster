@@ -1,7 +1,5 @@
 # Chesster, a chess.com API Wrapper
 
-![Chess.com Logo](https://images.chesscomfiles.com/uploads/v1/blog/637453.6a1c6327.668x375o.f644b102d0b0.png)
-
 ## Overview
 
 Chesster API Wrapper is a Python library that simplifies interactions with the Chess.com API. With this wrapper, you can easily access detailed data on players, matches, clubs, tournaments, and more using a user-friendly interface.
