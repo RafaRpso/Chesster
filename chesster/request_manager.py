@@ -1,7 +1,9 @@
+# -*- coding: utf-8 -*- 
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
-
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
 class RequestManager:
     
     @staticmethod

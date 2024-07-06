@@ -1,11 +1,19 @@
-from extractor import Extractor 
-from player import Player  
-from match import Match
+from chesster.player import Player  
+from chesster.match import Match
 
-class Chesster: 
+class Chesster:
+    """
+    Chesster is a class that initializes a chess match with a player and an extractor.
+
+    Attributes:
+        match (Match): An instance of the Match class, representing a chess match.
+        player (Player): An instance of the Player class, representing a player in the chess match.
+        extractor (Extractor): An instance of the Extractor class, used for extracting information.
+    """
+
     def __init__(self) -> None:
-        #TODO: Inserir DTO em todos 
-        self.match=Match()
-        self.player=Player() 
-        self.extractor=Extractor() 
-    
+        """
+        Initializes the Chesster class by creating instances of Match, Player, and Extractor.
+        """
+        self.match = Match()
+        self.player = Player()

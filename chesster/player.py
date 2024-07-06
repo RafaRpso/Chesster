@@ -1,19 +1,28 @@
 # -*- coding: utf-8 -*-
-import requests
 from datetime import datetime 
-from utils import Utils 
 from typing import List, Optional, Dict, Any 
-from request_manager import RequestManager
-import aiohttp
-import asyncio
-
+from chesster.src.service import Service
 
 class Player(): 
+    """
+    Represents a player in Chess.com.
+
+    This class provides methods to retrieve various information about a player, such as user information, player games, player clubs, and more.
+
+    """
     def __init__(self):
-        pass 
-    
-    def get_user(self, nick : str )-> List[dict]: 
-        return RequestManager.http(f'user/popup/{nick}', default=False) 
+        self.service = Service.Player() 
+        
+
+    def get_player(self, nick : str )-> List[dict]:
+        """
+        Retrieves user information from Chess.com.
+        
+        :param nick: Chess.com username.
+        :return: User information.
+        
+        """ 
+        return self.service.get_player(nick) 
     
     
     def get_player_games_archived(
@@ -42,169 +51,81 @@ class Player():
         :param get_fen: Retrieve FEN data.
         :return: List of games matching the filters.
         """
-        return asyncio.run(self.__get_user_games_async(
-            nick, start_date, end_date, only_blitz, only_rapid, only_defeat, only_win, get_pgn, get_fen
-        ))
+        return self.service.get_player_games_archived( nick, start_date, end_date, only_blitz, only_rapid, only_defeat, only_win, get_pgn, get_fen) 
            
            
     def get_players_by_country(self, country_iso : str ) -> List[dict ]: 
-        return RequestManager.http(f'country/{country_iso.upper()}/players')['players']
+        """ 
+        Retrieves a list of players from a specific country.
+        
+        :param country_iso: Country ISO code (US, BR, CA. CN, etc.)
+        :return: List of players from the specified country
+        """
+        return self.service.get_players_by_country(country_iso ) 
     
-    def get_leaderboards(self, only_rapid:bool=False, only_blitz:bool=False ) -> List[dict ]: 
-        return RequestManager.http(f'/leaderboards')
+    def get_leaderboard(self) -> List[dict ]: 
+        """ 
+        Retrieves the Chess.com leaderboards.
+        :return: Leaderboards.
+        """
+        return self.service.get_leaderboard() 
         
     def get_titled_players(self, title :str="GM") -> List[dict ] : 
-        return RequestManager.http(f'/titled_players/ {title}')
+        """ 
+        Retrieves a list of titled players.
+            
+        :param title: Title of the players to retrieve (GM, IM, FM, WGM, WIM, WFM).
+        :return List of titled players."""
+        return self.service.get_titled_players(title)   
     
-    def get_player_online_status(self, nick:str) -> dict:
-        return RequestManager.http(f'/player/{nick}/is-online')
-    
-    def get_player_clubs(self, nick:str) -> List[dict]:
-        return RequestManager.http(f'/player/{nick}/clubs')
-    
-    def get_player_tournaments(self, nick:str) -> List[dict]:
-        return RequestManager.http(f'/player/{nick}/tournaments')
-    
-    def get_player_clubs(self, nick:str)->List[dict]: 
-        return RequestManager.http(f'/player/{nick}/clubs')
-    
-    def get_player_team_matches(self, nick:str)->List[dict]:
-        return RequestManager.http(f'/player/{nick}/matches')
-    
-
-
+    def get_player_online_status(self, nick: str) -> str:
+        """
+        Retrieves the online status of a player.
         
-    def __filter_games_by_user_conditions(
-        self, 
-        games: List[Dict[str, Any]], 
-        filters: Dict[str, bool], 
-        nick: str
-    ) -> List[Dict[str, Any]]:
-        filtered_games = []
-        if not any(filters.values()):
-            return games
+        :param nick: Nickname of the player.
+        :return: Dictionary containing the player's online status.
+        """
+        return self.service.get_player_online_status( nick) 
+
+    def get_player_clubs(self, nick: str) -> List[dict]:
+        """
+        Retrieves a list of clubs a player is associated with.
         
-        for game in games:
-            if filters['only_blitz'] and game['time_class'] != 'blitz':
-                continue
-            if filters['only_rapid'] and game['time_class'] != 'rapid':
-                continue
-            if filters['only_defeat'] and not (
-                (game['white']['username'] == nick and game['white']['result'] == 'checkmated') or 
-                (game['black']['username'] == nick and game['black']['result'] == 'checkmated')
-            ):
-                continue
-            if filters['only_win'] and not (
-                (game['white']['username'] == nick and game['white']['result'] == 'win') or 
-                (game['black']['username'] == nick and game['black']['result'] == 'win')
-            ):
-                continue
+        :param nick: Nickname of the player.
+        :return: List of dictionaries representing player's clubs.
+        """
+        return self.service.get_player_clubs(nick) 
 
-            filtered_game = {"url": game['url']}
-            if filters['get_pgn'] and 'pgn' in game:
-                filtered_game['pgn'] = game['pgn']
-            if filters['get_fen'] and 'fen' in game:
-                filtered_game['fen'] = game['fen']
+    def get_player_tournaments(self, nick: str) -> List[dict]:
+        """
+        Retrieves a list of tournaments a player has participated in.
+        
+        :param nick: Nickname of the player.
+        :return: List of dictionaries representing player's tournaments.
+        """
+        return self.service.get_player_tournaments( nick) 
 
-            filtered_games.append(filtered_game)
+    def get_player_team_matches(self, nick: str) -> List[dict]:
+        """
+        Retrieves a list of team matches a player has participated in.
+        
+        :param nick: Nickname of the player.
+        :return: List of dictionaries representing player's team matches.
+        """
+        return self.service.get_player_team_matches( nick) 
 
-        return filtered_games
 
-    def get_player_recent_content(self, pages: int) -> List[dict]:
+    def get_player_recent_content(self, nick : str,  pages: int) -> List[dict]:
         """
         Retrieves recent content from Chess.com.
 
         :param pages: Number of pages to retrieve.
         :return: List of recent content.
         """
-        return asyncio.run(self.__get_player_recent_content(pages))
-        
-    def __filter_games_by_date(self, start_date: datetime|None,end_date: datetime|None,game:str):
-            if not game:
-                return False
-            dates=Utils.extract_date_from_url_games_by_date(game)
-            gm_year=dates['year']
-            gm_month=dates['month']
-            
-            if start_date and (gm_year < start_date.year or (gm_year == start_date.year and gm_month < start_date.month)):
-                return False
-            if end_date and (gm_year > end_date.year or (gm_year == end_date.year and gm_month > end_date.month)):
-                return False
-            return True
-        
-    async def __get_user_games_async(
-        self, 
-        nick: str, 
-        start_date: Optional[datetime] = None, 
-        end_date: Optional[datetime] = None,
-        only_blitz: bool = False, 
-        only_rapid: bool = False, 
-        only_defeat: bool = False, 
-        only_win: bool = False, 
-        get_pgn: bool = False, 
-        get_fen: bool = False
-    ) -> List[Dict[str, Any]]:
-        """
-        Retrieves user games from Chess.com within the specified date range and filters.
+        return self.service.get_player_recent_content(nick,  pages)
+    
 
-        :param nick: Chess.com username.
-        :param start_date: Start date for filtering games.
-        :param end_date: End date for filtering games.
-        :param only_blitz: Filter for blitz games only.
-        :param only_rapid: Filter for rapid games only.
-        :param only_defeat: Filter for games where the user was defeated.
-        :param only_win: Filter for games where the user won.
-        :param get_pgn: Retrieve PGN data.
-        :param get_fen: Retrieve FEN data.
-        :return: List of games matching the filters.
-        """
-        async with aiohttp.ClientSession(headers=self.headers) as session:
-            response = await session.get(f'/pub/player/{nick}/games/archives')
-            games_by_date = await response.json()
-            
-            games_months = [
-                {'game': game, 'date': Utils.extract_date_from_url_games_by_date(game)} 
-                for game in games_by_date['archives'] 
-                if self.__filter_games_by_date(start_date, end_date, game)
-            ]
-
-            tasks = [self.__fetch_game_data(g['game'], session) for g in games_months]
-            all_games_responses = await asyncio.gather(*tasks)
-            
-            all_games = [game for response in all_games_responses for game in response['games']]
-
-            filters = {
-                'only_blitz': only_blitz,
-                'only_rapid': only_rapid,
-                'only_defeat': only_defeat,
-                'only_win': only_win,
-                'get_pgn': get_pgn,
-                'get_fen': get_fen
-            }
-
-            return self.__filter_games_by_user_conditions(all_games, filters, nick)
         
         
-        
-    async def __get_player_recent_content(self, pages: int) -> List[dict]:
-        async def __fetch_content( session, url):
-            async with session.get(url) as response:
-                return await response.json()
-        
-        contents:list  = []
-        _url:str = 'https://www.chess.com/callback/member/activity/hikaru?page={}'
 
-        async with aiohttp.ClientSession() as session:
-            tasks: list = []
-            for i in range(pages):
-                url = _url.format(i)
-                tasks.append(__fetch_content(session, url))
-            results = await asyncio.gather(*tasks)
-
-            for res in results:
-                if res['recentContents'] is None:
-                    break
-                contents.extend(res['recentContents'])
-
-        return contents
     
