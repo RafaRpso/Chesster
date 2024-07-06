@@ -1,0 +1,4 @@
+aiohttp
+requests
+urllib3
+asyncio
