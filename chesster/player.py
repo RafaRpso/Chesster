@@ -3,21 +3,20 @@ import requests
 from datetime import datetime 
 from utils import Utils 
 from typing import List, Optional, Dict, Any 
+from request_manager import RequestManager
 import aiohttp
 import asyncio
 
+
 class Player(): 
     def __init__(self):
-        super().__init__()
+        pass 
     
     def get_user(self, nick : str )-> List[dict]: 
-        #TODO: Adicionar filtros e mais funcionalidades para isso 
-        res=requests.get(f'https://www.chess.com/callback/user/popup/{nick}').json()
-        return res 
+        return RequestManager.http(f'user/popup/{nick}', default=False) 
     
     
-    
-    def get_user_games(
+    def get_player_games_archived(
         self, 
         nick: str, 
         start_date: Optional[datetime] = None, 
@@ -47,7 +46,33 @@ class Player():
             nick, start_date, end_date, only_blitz, only_rapid, only_defeat, only_win, get_pgn, get_fen
         ))
            
+           
+    def get_players_by_country(self, country_iso : str ) -> List[dict ]: 
+        return RequestManager.http(f'country/{country_iso.upper()}/players')['players']
     
+    def get_leaderboards(self, only_rapid:bool=False, only_blitz:bool=False ) -> List[dict ]: 
+        return RequestManager.http(f'/leaderboards')
+        
+    def get_titled_players(self, title :str="GM") -> List[dict ] : 
+        return RequestManager.http(f'/titled_players/ {title}')
+    
+    def get_player_online_status(self, nick:str) -> dict:
+        return RequestManager.http(f'/player/{nick}/is-online')
+    
+    def get_player_clubs(self, nick:str) -> List[dict]:
+        return RequestManager.http(f'/player/{nick}/clubs')
+    
+    def get_player_tournaments(self, nick:str) -> List[dict]:
+        return RequestManager.http(f'/player/{nick}/tournaments')
+    
+    def get_player_clubs(self, nick:str)->List[dict]: 
+        return RequestManager.http(f'/player/{nick}/clubs')
+    
+    def get_player_team_matches(self, nick:str)->List[dict]:
+        return RequestManager.http(f'/player/{nick}/matches')
+    
+
+
         
     def __filter_games_by_user_conditions(
         self, 
@@ -84,10 +109,15 @@ class Player():
             filtered_games.append(filtered_game)
 
         return filtered_games
-            
-    async def __fetch_game_data(self, url: str, session: aiohttp.ClientSession) -> Dict[str, Any]:
-        async with session.get(url) as response:
-            return await response.json()
+
+    def get_player_recent_content(self, pages: int) -> List[dict]:
+        """
+        Retrieves recent content from Chess.com.
+
+        :param pages: Number of pages to retrieve.
+        :return: List of recent content.
+        """
+        return asyncio.run(self.__get_player_recent_content(pages))
         
     def __filter_games_by_date(self, start_date: datetime|None,end_date: datetime|None,game:str):
             if not game:
@@ -129,7 +159,7 @@ class Player():
         :return: List of games matching the filters.
         """
         async with aiohttp.ClientSession(headers=self.headers) as session:
-            response = await session.get(f'https://api.chess.com/pub/player/{nick}/games/archives')
+            response = await session.get(f'/pub/player/{nick}/games/archives')
             games_by_date = await response.json()
             
             games_months = [
@@ -153,3 +183,28 @@ class Player():
             }
 
             return self.__filter_games_by_user_conditions(all_games, filters, nick)
+        
+        
+        
+    async def __get_player_recent_content(self, pages: int) -> List[dict]:
+        async def __fetch_content( session, url):
+            async with session.get(url) as response:
+                return await response.json()
+        
+        contents:list  = []
+        _url:str = 'https://www.chess.com/callback/member/activity/hikaru?page={}'
+
+        async with aiohttp.ClientSession() as session:
+            tasks: list = []
+            for i in range(pages):
+                url = _url.format(i)
+                tasks.append(__fetch_content(session, url))
+            results = await asyncio.gather(*tasks)
+
+            for res in results:
+                if res['recentContents'] is None:
+                    break
+                contents.extend(res['recentContents'])
+
+        return contents
+    

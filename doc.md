@@ -1,6 +1,6 @@
-get_match: Recuperar informações detalhadas sobre uma partida específica usando o ID da partida.
+Xget_match: Recuperar informações detalhadas sobre uma partida específica usando o ID da partida.
 
-get_player_stats: Obter estatísticas detalhadas de um jogador, como classificações e resultados de jogos em diferentes modalidades (blitz, bullet, rapid, etc.).
+Xget_player_stats: Obter estatísticas detalhadas de um jogador, como classificações e resultados de jogos em diferentes modalidades (blitz, bullet, rapid, etc.).
 
 get_club_info: Recuperar informações sobre um clube específico, incluindo membros, eventos e estatísticas.
 
@@ -27,3 +27,11 @@ get_open_challenges: Recuperar uma lista de desafios abertos que o jogador criou
 get_news_feed: Obter as últimas notícias e artigos publicados no Chess.com.
 
 get_player_profile: Recuperar o perfil completo de um jogador, incluindo biografia, estatísticas e histórico de jogos.
+
+
+GET MORE POPULAR USERS 
+
+GET RANDOM SAMPLE USERS 
+
+
+analisador
