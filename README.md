@@ -11,12 +11,3 @@ To install the library, you can use pip:
 pip install chesster
 ```
 
-## Contributing
-
-Contributions are welcome! Feel free to open issues or submit pull requests on the [GitHub repository](https://github.com/RafaRpso/Chesster).
-
-## License
-
-This project is licensed under the [GNU License](https://www.gnu.org/licenses/gpl-3.0.en.html).
-
-
